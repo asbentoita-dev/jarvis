@@ -1,0 +1,26 @@
+# Jarvis Claude - Requisitos
+# Instale: pip install -r requirements.txt
+
+requests
+chromadb
+flask
+psutil
+pypdf
+python-docx
+openpyxl
+Pillow
+pystray
+fpdf2
+genanki
+playwright
+
+# Opcional (para recursos avançados)
+# torch-directml  # geração de imagens em GPU AMD
+
+# Agente Desktop (Nível 2 — UI Automation, ver ARQUITETURA_AGENTE_DESKTOP.md)
+pywinauto
+pywin32
+pygetwindow
+
+# 🧊 Integração nativa com llama.cpp (otimizações do KoboldCpp)
+llama-cpp-python

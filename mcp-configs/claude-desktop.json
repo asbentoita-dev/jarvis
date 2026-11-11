@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "agent-browser": {
+      "command": "C:\\Users\\Casa\\AppData\\Roaming\\npm\\agent-browser.cmd",
+      "args": ["mcp"]
+    },
+    "selenium": {
+      "command": "C:\\Python314\\python.exe",
+      "args": ["C:\\Users\\Casa\\mcp-servers\\selenium_mcp.py"]
+    },
+    "pyautogui": {
+      "command": "C:\\Python314\\python.exe",
+      "args": ["C:\\Users\\Casa\\mcp-servers\\pyautogui_mcp.py"]
+    }
+  }
+}

@@ -1,0 +1,131 @@
+# 🔌 Plugin: executar_missao — o multiagente reescrito como ferramenta
+# Padrão Planejar → Executar → Criticar, integrado à janela do Jarvis.
+#
+# Correções em relação ao core/ antigo (v4.x):
+# 1. O plano é quebrado por LINHAS (não por json.loads que sempre falhava)
+# 2. O histórico da missão usa o formato correto de mensagens do Ollama
+# 3. O crítico responde APROVADO/REPROVADO na 1ª linha (sem o bug do
+#    "sim" dentro de "simples/assim")
+# 4. NADA é salvo na memória de longo prazo automaticamente (sem poluição)
+# Extras: respeita o botão ⏹ parar, e cada etapa reprovada ganha 1 retry.
+
+
+def _planejar(objetivo, max_etapas):
+    import llm
+
+    prompt = f"""Monte um plano de execução para o objetivo abaixo.
+
+Regras:
+- Uma etapa por linha, sem números, sem marcadores, sem explicações.
+- No máximo {max_etapas} etapas.
+- Cada etapa deve ser uma ação concreta e executável.
+- Etapas de pesquisa vêm antes de etapas de escrita/criação.
+
+Objetivo: {objetivo}"""
+
+    r = llm.chat([{"role": "user", "content": prompt}])
+    linhas = (r.get("content") or "").splitlines()
+
+    etapas = []
+    for linha in linhas:
+        limpa = linha.strip().lstrip("-•*0123456789.() ").strip()
+        if limpa and len(limpa) > 3:
+            etapas.append(limpa)
+
+    return etapas[:max_etapas]
+
+
+def _criticar(etapa, resultado):
+    import llm
+
+    prompt = f"""Etapa pedida: {etapa}
+
+Resultado obtido:
+{str(resultado)[:1500]}
+
+A etapa foi realmente cumprida?
+Responda na PRIMEIRA linha com UMA única palavra: APROVADO ou REPROVADO
+Na segunda linha, o motivo em poucas palavras."""
+
+    r = llm.chat([{"role": "user", "content": prompt}])
+    texto = (r.get("content") or "").strip()
+    linhas = texto.splitlines()
+
+    aprovado = bool(linhas) and linhas[0].strip().upper().startswith("APROVADO")
+    motivo = linhas[1].strip() if len(linhas) > 1 else texto[:100]
+
+    return aprovado, motivo
+
+
+def executar_missao(objetivo, max_etapas=6):
+    """Planeja, executa etapa por etapa (com ferramentas) e confere."""
+    import agent
+
+    max_etapas = max(1, min(int(max_etapas or 6), 8))
+
+    # ── 1. PLANEJAR ──
+    etapas = _planejar(objetivo, max_etapas)
+    if not etapas:
+        return "ERRO: não consegui montar um plano para esse objetivo."
+
+    relatorio = [f"🎯 MISSÃO: {objetivo}", "", "📋 PLANO:"]
+    relatorio += [f"  {i}. {e}" for i, e in enumerate(etapas, 1)]
+
+    # histórico PRÓPRIO da missão, no formato correto de mensagens —
+    # cada etapa enxerga o que as anteriores fizeram
+    historico_missao = []
+    aprovadas = 0
+
+    # ── 2. EXECUTAR + CRITICAR ──
+    for i, etapa in enumerate(etapas, 1):
+        pedido = (f"(Missão em andamento: {objetivo})\n"
+                  f"Execute agora APENAS esta etapa e reporte o resultado: "
+                  f"{etapa}")
+
+        resultado, _ = agent.processar_mensagem(pedido, historico_missao)
+
+        # botão ⏹ parar da janela interrompe a missão inteira
+        if isinstance(resultado, str) and resultado.startswith("⏹"):
+            relatorio.append(f"\n⏹ Missão interrompida pelo usuário na etapa {i}.")
+            return "\n".join(relatorio)
+
+        aprovado, motivo = _criticar(etapa, resultado)
+
+        # ── retry único com o feedback do crítico ──
+        if not aprovado:
+            pedido2 = (f"A etapa '{etapa}' foi REPROVADA pelo revisor "
+                       f"(motivo: {motivo}). Corrija e complete a etapa agora.")
+            resultado, _ = agent.processar_mensagem(pedido2, historico_missao)
+
+            if isinstance(resultado, str) and resultado.startswith("⏹"):
+                relatorio.append(f"\n⏹ Missão interrompida na etapa {i}.")
+                return "\n".join(relatorio)
+
+            aprovado, motivo = _criticar(etapa, resultado)
+
+        aprovadas += 1 if aprovado else 0
+        selo = "✅" if aprovado else f"⚠ pendente ({motivo})"
+        relatorio.append(f"\n⚙ Etapa {i}: {etapa}\n"
+                         f"   → {str(resultado)[:400]}\n"
+                         f"   🔍 {selo}")
+
+    # ── 3. FECHAMENTO ──
+    relatorio.append(f"\n🏁 Missão finalizada: {aprovadas}/{len(etapas)} "
+                     f"etapas aprovadas pelo revisor.")
+
+    return "\n".join(relatorio)
+
+
+TOOLS = [
+    {"type": "function", "function": {
+        "name": "executar_missao",
+        "description": "Executa um objetivo COMPLEXO em etapas: planeja, executa cada etapa usando as ferramentas e um revisor confere cada resultado. Use quando o usuario pedir uma 'missao', um projeto completo ou uma tarefa grande com varias acoes encadeadas. Para pedidos simples, NAO use - execute diretamente.",
+        "parameters": {"type": "object", "properties": {
+            "objetivo": {"type": "string", "description": "O objetivo completo da missao"},
+            "max_etapas": {"type": "integer", "description": "Maximo de etapas do plano (padrao 6, maximo 8)"}},
+            "required": ["objetivo"]}}},
+]
+
+FERRAMENTAS = {
+    "executar_missao": executar_missao,
+}

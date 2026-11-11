@@ -1,0 +1,19 @@
+{
+  "servers": {
+    "agent-browser": {
+      "type": "stdio",
+      "command": "C:\\Users\\Casa\\AppData\\Roaming\\npm\\agent-browser.cmd",
+      "args": ["mcp"]
+    },
+    "selenium": {
+      "type": "stdio",
+      "command": "C:\\Python314\\python.exe",
+      "args": ["C:\\Users\\Casa\\mcp-servers\\selenium_mcp.py"]
+    },
+    "pyautogui": {
+      "type": "stdio",
+      "command": "C:\\Python314\\python.exe",
+      "args": ["C:\\Users\\Casa\\mcp-servers\\pyautogui_mcp.py"]
+    }
+  }
+}

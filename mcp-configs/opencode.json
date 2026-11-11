@@ -1,0 +1,20 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "agent-browser": {
+      "type": "local",
+      "command": ["C:\\Users\\Casa\\AppData\\Roaming\\npm\\agent-browser.cmd", "mcp"],
+      "enabled": true
+    },
+    "selenium": {
+      "type": "local",
+      "command": ["C:\\Python314\\python.exe", "C:\\Users\\Casa\\mcp-servers\\selenium_mcp.py"],
+      "enabled": true
+    },
+    "pyautogui": {
+      "type": "local",
+      "command": ["C:\\Python314\\python.exe", "C:\\Users\\Casa\\mcp-servers\\pyautogui_mcp.py"],
+      "enabled": true
+    }
+  }
+}

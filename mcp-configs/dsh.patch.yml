@@ -1,0 +1,30 @@
+# agent-browser para DeepSeek Harness (dsh)
+# Destino: ~/.dsh/profiles/<perfil>/cordis.patch.yml  (ex.: profiles/web/cordis.patch.yml)
+# Requer o plugin @deepseek-ai/dsh-mcp-client (vem no core; senão: dsh plugin --profile <perfil> add @deepseek-ai/dsh-mcp-client)
+# Tools aparecem como mcp__agent-browser__<ferramenta> após reiniciar o dsh.
+
+- insert:
+    - id: mcp-agent-browser
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: agent-browser
+        transport: stdio
+        command: 'C:\Users\Casa\AppData\Roaming\npm\agent-browser.cmd'
+        args: ['mcp']
+        toolCallTimeoutMs: 60000
+    - id: mcp-selenium
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: selenium
+        transport: stdio
+        command: 'C:\Python314\python.exe'
+        args: ['C:\Users\Casa\mcp-servers\selenium_mcp.py']
+        toolCallTimeoutMs: 60000
+    - id: mcp-pyautogui
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: pyautogui
+        transport: stdio
+        command: 'C:\Python314\python.exe'
+        args: ['C:\Users\Casa\mcp-servers\pyautogui_mcp.py']
+        toolCallTimeoutMs: 60000
