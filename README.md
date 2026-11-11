@@ -94,7 +94,7 @@ jarvis/
 
 ## 🛠️ Desenvolvedor
 
-- Nome: Bento
+- Nome: Agenor Silva Bento
 - Email: asbento.ita@gmail.com
 - GitHub: [asbentoita-dev](https://github.com/asbentoita-dev)
 
